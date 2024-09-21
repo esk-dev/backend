@@ -1,0 +1,6 @@
+@NotesBackend_HostAddress = http://localhost:5048
+
+GET {{NotesBackend_HostAddress}}/
+Accept: application/json
+
+###
