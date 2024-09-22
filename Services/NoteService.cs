@@ -28,19 +28,40 @@ namespace NotesBackend.Services
 
         public async Task<Note> GetNoteById(int noteId)
         {
-            return await _context.Notes.FindAsync(noteId);
+            return await _context.Notes
+            .Include(n => n.NoteTags)
+            .ThenInclude(nt => nt.Tag)
+            .FirstOrDefaultAsync(n => n.Id == noteId);
         }
 
-        public async Task<List<Note>> GetNoteListByUserId(int userId)
+        public async Task<List<Note>> GetNoteListByUserId(string userId)
         {
-            return await _context.Notes.Where(n => n.UserId == userId.ToString()).ToListAsync();
+            return await _context.Notes.Where(n => n.UserId == userId).ToListAsync();
         }
 
-        public async Task<Note> Update(Note note)
+        public async Task<List<Note>> GetNoteWithTagsListByUserId(string userId)
         {
-            _context.Entry(note).State = EntityState.Modified;
+            return await _context.Notes
+            .Where(n => n.UserId == userId)
+            .Include(n => n.NoteTags)
+            .ThenInclude(nt => nt.Tag)
+            .ToListAsync();
+        }
+
+        public async Task<Note> UpdateAsync(int id, Note note)
+        {
+            var existingNote = await _context.Notes.FindAsync(id);
+
+            if (existingNote == null)
+            {
+                return null;
+            }
+
+            existingNote.Title = note.Title;
+            existingNote.Content = note.Content;
+
             await _context.SaveChangesAsync();
-            return note;
+            return existingNote;
         }
 
         public async Task Delete(int noteId)

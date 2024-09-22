@@ -12,6 +12,6 @@ namespace NotesBackend.Models
         public DateTime UpdatedAt { get; set; }
         public string UserId { get; set; }
         public User? User { get; set; }
-        public List<NoteTag>? NoteTags { get; set; }
+        public List<NoteTag> NoteTags { get; set; }
     }
 }

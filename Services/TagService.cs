@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using NotesBackend.Data;
 using NotesBackend.Models;
 using NotesBackend.Interfaces;
+using NotesBackend.Mappers;
 
 namespace NotesBackend.Services
 {
@@ -18,7 +19,7 @@ namespace NotesBackend.Services
             _context = context;
         }
 
-        public async Task<Tag> CreateTag(string tagName)
+        public async Task<Tag> CreateTagAsync(string tagName)
         {
             var tag = new Tag { TagName = tagName };
             _context.Tags.Add(tag);
@@ -26,7 +27,22 @@ namespace NotesBackend.Services
             return tag;
         }
 
-        public async Task DeleteTag(int tagId)
+        public async Task<List<Tag>> GetTagsAsync()
+        {
+            return await _context.Tags.ToListAsync();
+        }
+
+        public async Task<Tag> GetTagByIdAsync(int tagId)
+        {
+            return await _context.Tags.FindAsync(tagId);
+        }
+
+        public async Task<Tag> GetTagByNameAsync(string tagName)
+        {
+            return await _context.Tags.FirstOrDefaultAsync(t => t.TagName == tagName);
+        }
+
+        public async Task DeleteTagAsync(int tagId)
         {
             var tag = await _context.Tags.FindAsync(tagId);
             if (tag != null)
@@ -36,48 +52,64 @@ namespace NotesBackend.Services
             }
         }
 
-        public async Task<Tag> GetTagByName(string tagName)
+        public async Task<Tag> UpdateTagAsync(int tagId, Tag tag)
         {
-            return await _context.Tags.FirstOrDefaultAsync(t => t.TagName == tagName);
+            var existingTag = await _context.Tags.FindAsync(tagId);
+
+            if (existingTag == null)
+            {
+                return null;
+            }
+
+            existingTag.TagName = tag.TagName;
+
+            await _context.SaveChangesAsync();
+            return existingTag;
         }
 
-        public async Task AddTagToNote(int noteId, int tagId)
+
+        public async Task AddTagToNoteAsync(int noteId, int tagId)
         {
             var noteTag = new NoteTag { NoteId = noteId, TagId = tagId };
             _context.NoteTags.Add(noteTag);
             await _context.SaveChangesAsync();
         }
 
-        public async Task RemoveTagFromNote(int noteId, int tagId)
+        public async Task<Tag> RemoveTagFromNoteAsync(Note note, Tag tag)
         {
-            var noteTag = await _context.NoteTags.FindAsync(noteId, tagId);
-            if (noteTag != null)
-            {
-                _context.NoteTags.Remove(noteTag);
-                await _context.SaveChangesAsync();
-            }
+            var noteTag = await _context.NoteTags.FirstOrDefaultAsync(nt => nt.NoteId == note.Id && nt.TagId == tag.Id);
+
+            if (noteTag == null)
+                return null;
+
+            _context.NoteTags.Remove(noteTag);
+
+            await _context.SaveChangesAsync();
+            return tag;
         }
 
-        public async Task AddTagsToNote(int noteId, List<string> tagNames)
+        public async Task AddTagsToNoteAsync(int noteId, List<string> tagNames)
         {
             List<Tag> tagModels = new List<Tag>();
             foreach (var tagName in tagNames)
             {
-                var model = await GetTagByName(tagName);
+                var model = await GetTagByNameAsync(tagName);
                 if (model != null)
                 {
                     tagModels.Add(model);
                 }
                 else
                 {
-                    var tagModel = await CreateTag(tagName);
+                    var tagModel = await CreateTagAsync(tagName);
                     tagModels.Add(tagModel);
                 };
             }
 
             var noteTags = tagModels.Select(t => new NoteTag { NoteId = noteId, TagId = t.Id });
 
-            _context.NoteTags.AddRange(noteTags);
+            await _context.NoteTags.AddRangeAsync(noteTags);
+            await _context.SaveChangesAsync();
         }
+
     }
 }

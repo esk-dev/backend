@@ -3,39 +3,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using NotesBackend.Models;
-using NotesBackend.Services;
 using NotesBackend.Dtos.Note;
 using NotesBackend.Interfaces;
 using NotesBackend.Mappers;
-using Microsoft.AspNetCore.Identity;
 using NotesBackend.Extensions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using NotesBackend.Dtos;
 
 namespace NotesBackend.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class NotesController : ControllerBase
     {
         private readonly INoteService _noteService;
         private readonly ITagService _tagService;
-        private readonly UserService _userService;
-        public NotesController(INoteService noteService, ITagService tagService, UserService userService)
+        private readonly UserManager<User> _userManager;
+        public NotesController(INoteService noteService, ITagService tagService, UserManager<User> userManager)
         {
             _noteService = noteService;
             _tagService = tagService;
-            _userService = userService;
+            _userManager = userManager;
         }
 
+        private async Task<User> GetLoggedInUser()
+        {
+            var userName = User.GetLoggedInUserName();
+            return await _userManager.FindByNameAsync(userName);
+        }
 
         // GET: api/Notes
         [HttpGet]
-        public async Task<ActionResult<List<Note>>> GetNotes()
+        public async Task<ActionResult<List<Note>>> GetNotesWithTags()
         {
-            var user_name = User.GetUsername();
-            var user = _userService.getUserContext(user_name);
-            var notes = await _noteService.GetNoteListByUserId(user.Id);
+            var user = await GetLoggedInUser();
+            var notes = await _noteService.GetNoteWithTagsListByUserId(user.Id);
             var noteDtoe = notes.Select(n => n.ToNoteDto()).ToList();
             return Ok(noteDtoe);
         }
@@ -47,7 +54,7 @@ namespace NotesBackend.Controllers
             var note = await _noteService.GetNoteById(id);
             if (note == null)
             {
-                return NotFound();
+                return NotFound("Note not found");
             }
 
             return Ok(note.ToNoteDto());
@@ -60,29 +67,35 @@ namespace NotesBackend.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var user = await GetLoggedInUser();
             var noteModel = createNoteDto.ToNoteFromCreateDto();
+            noteModel.UserId = user.Id;
             var note = await _noteService.Create(noteModel);
             var tagNames = createNoteDto.tagNames;
             if (tagNames.LongCount() != 0)
             {
-                await _tagService.AddTagsToNote(note.Id, tagNames);
+                await _tagService.AddTagsToNoteAsync(note.Id, tagNames);
             }
 
             return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note.ToNoteDto());
         }
 
         // PUT: api/Notes/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateNote(int id, Note note)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateNote([FromRoute] int id, [FromBody] UpdateNoteDto updateNoteDto)
         {
-            if (id != note.Id)
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var noteModel = await _noteService.UpdateAsync(id, updateNoteDto.ToNoteFromUpdateDto(id));
+
+            if (noteModel == null)
             {
-                return BadRequest();
+                return NotFound("Note not found");
             }
 
-            await _noteService.Update(note);
-
-            return NoContent();
+            var note = await _noteService.GetNoteById(id);
+            return Ok(note.ToNoteDto());
         }
 
         // DELETE: api/Notes/5
@@ -91,7 +104,7 @@ namespace NotesBackend.Controllers
         {
             await _noteService.Delete(id);
 
-            return NoContent();
+            return Ok();
         }
 
 
@@ -104,19 +117,19 @@ namespace NotesBackend.Controllers
 
             if (note == null)
             {
-                return NotFound();
+                return NotFound("Note not found");
             }
 
-            var tag = await _tagService.GetTagByName(tagName);
+            var tag = await _tagService.GetTagByNameAsync(tagName);
 
             if (tag == null)
             {
-                tag = await _tagService.CreateTag(tagName);
+                tag = await _tagService.CreateTagAsync(tagName);
             }
 
-            await _tagService.AddTagToNote(noteId, tag.Id);
+            await _tagService.AddTagToNoteAsync(noteId, tag.Id);
 
-            return NoContent();
+            return Ok(note.ToNoteDto());
         }
 
         // DELETE: api/Notes/{noteId}/tags/{tagName}
@@ -126,18 +139,23 @@ namespace NotesBackend.Controllers
             var note = await _noteService.GetNoteById(noteId);
             if (note == null)
             {
-                return NotFound();
+                return NotFound("Note not found");
             }
 
-            var tag = await _tagService.GetTagByName(tagName);
+            var tag = await _tagService.GetTagByNameAsync(tagName);
             if (tag == null)
             {
-                return NotFound();
+                return NotFound("Tag not found");
             }
 
-            await _tagService.RemoveTagFromNote(noteId, tag.Id);
+            var state = await _tagService.RemoveTagFromNoteAsync(note, tag);
 
-            return NoContent();
+            if (state == null)
+            {
+                return NotFound("Not found realation between Note and TAg");
+            }
+
+            return Ok(note.ToNoteDto());
         }
 
     }

@@ -1,12 +1,17 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace NotesBackend.Extensions
 {
     public static class ClaimsExtensions
     {
-        public static string GetUsername(this ClaimsPrincipal user)
+        public static string GetLoggedInUserName(this ClaimsPrincipal principal)
         {
-            return user.Claims.SingleOrDefault(x => x.Type.Equals("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname")).Value;
+            if (principal == null)
+                throw new ArgumentNullException(nameof(principal));
+
+            return principal.FindFirstValue(ClaimTypes.GivenName);
         }
+
     }
 }

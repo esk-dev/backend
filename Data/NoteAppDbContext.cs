@@ -23,20 +23,6 @@ namespace NotesBackend.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // modelBuilder.Entity<UserNotes>(entity =>
-            // {
-            //     entity.HasKey(e => new { e.UserId, e.NoteId });
-            //     entity
-            //     .HasOne(u => u.User)
-            //     .WithMany(u => u.UserNotes)
-            //     .HasForeignKey(p => p.UserId);
-
-            //     entity
-            //     .HasOne(n => n.Note)
-            //     .WithMany(n => n.UserNotes)
-            //     .HasForeignKey(u => u.NoteId);
-            // });
-
             modelBuilder.Entity<Note>(entity =>
             {
                 entity.HasKey(e => e.Id);

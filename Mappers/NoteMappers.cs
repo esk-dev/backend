@@ -16,7 +16,7 @@ namespace NotesBackend.Mappers
                 UserId = noteModel.UserId,
                 CreatedAt = noteModel.CreatedAt,
                 UpdatedAt = noteModel.UpdatedAt,
-                tags = noteModel.NoteTags.Select(noteTags => noteTags.Tag).ToList(),
+                tags = noteModel.NoteTags.Select(noteTags => noteTags?.ToNoteTagDto()).ToList(),
             };
         }
         public static Note ToNoteFromCreateDto(this CreateNoteDto noteDto)
@@ -25,6 +25,15 @@ namespace NotesBackend.Mappers
             {
                 Title = noteDto.Title,
                 Content = noteDto.Content,
+            };
+        }
+        public static Note ToNoteFromUpdateDto(this UpdateNoteDto updateNoteDto, int id)
+        {
+            return new Note
+            {
+                Title = updateNoteDto.Title,
+                Content = updateNoteDto.Content,
+                Id = id
             };
         }
     }
