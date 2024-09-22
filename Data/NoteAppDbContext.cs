@@ -38,7 +38,8 @@ namespace NotesBackend.Data
                 entity
                 .HasMany(e => e.NoteTags)
                 .WithOne(e => e.Note)
-                .HasForeignKey(e => e.NoteId);
+                .HasForeignKey(e => e.NoteId)
+                .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Tag>(entity =>
@@ -53,7 +54,8 @@ namespace NotesBackend.Data
                 entity
                 .HasMany(e => e.NoteTags)
                 .WithOne(e => e.Tag)
-                .HasForeignKey(e => e.TagId);
+                .HasForeignKey(e => e.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<NoteTag>(entity =>
