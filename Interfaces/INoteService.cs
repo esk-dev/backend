@@ -9,6 +9,7 @@ namespace NotesBackend.Interfaces
         Task<List<Note>> GetNoteListByUserId(string userId);
         Task<List<Note>> GetNoteWithTagsListByUserId(string userId);
         Task<Note> UpdateAsync(int Id, Note note);
+        Task UpdateNoteTagsAsync(int noteId, List<string> tagNames);
         Task Delete(int noteId);
 
     }

@@ -16,7 +16,7 @@ namespace NotesBackend.Mappers
                 UserId = noteModel.UserId,
                 CreatedAt = noteModel.CreatedAt,
                 UpdatedAt = noteModel.UpdatedAt,
-                tags = noteModel.NoteTags.Select(noteTags => noteTags?.ToNoteTagDto()).ToList(),
+                Tags = noteModel.NoteTags.Select(noteTags => noteTags?.ToNoteTagDto()).Select(nt => nt.tag).ToList(),
             };
         }
         public static Note ToNoteFromCreateDto(this CreateNoteDto noteDto)

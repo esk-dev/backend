@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using NotesBackend.Models;
 
 namespace NotesBackend.Dtos.Note
 {
@@ -13,6 +14,7 @@ namespace NotesBackend.Dtos.Note
         [MinLength(5, ErrorMessage = "Content must be 5 characters")]
         [MaxLength(280, ErrorMessage = "Content cannot be over 280 characters")]
         public string Content { get; set; } = string.Empty;
+        public List<string> tags { get; set; } = new List<string>();
     }
 
 }

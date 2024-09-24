@@ -10,6 +10,6 @@ namespace NotesBackend.Dtos
         public required string UserId { get; set; }
         public required DateTime CreatedAt { get; set; }
         public required DateTime UpdatedAt { get; set; }
-        public required List<NoteTagDto> tags { get; set; } = new List<NoteTagDto>();
+        public required List<TagDto> Tags { get; set; } = new List<TagDto>();
     }
 }

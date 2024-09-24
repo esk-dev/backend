@@ -7,16 +7,19 @@ using Microsoft.EntityFrameworkCore;
 using NotesBackend.Data;
 using NotesBackend.Models;
 using NotesBackend.Interfaces;
+using System.Security.Cryptography;
 
 namespace NotesBackend.Services
 {
     public class NoteService : INoteService
     {
         private readonly NotesBackendDbContext _context;
+        private readonly ITagService _tagService;
 
-        public NoteService(NotesBackendDbContext context)
+        public NoteService(NotesBackendDbContext context, ITagService tagService)
         {
             _context = context;
+            _tagService = tagService;
         }
 
         public async Task<Note> Create(Note note)
@@ -72,6 +75,38 @@ namespace NotesBackend.Services
                 _context.Notes.Remove(note);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task UpdateNoteTagsAsync(int noteId, List<string> tags)
+        {
+            var note = await _context.Notes.FirstAsync(note => note.Id == noteId);
+            var currentTags = await _context.NoteTags
+            .Where(nt => nt.NoteId == note.Id)
+            .Include(nt => nt.Tag)
+            .Select(nt => nt.Tag)
+            .ToListAsync();
+
+            var tagsToAdd = new List<string>();
+
+            var tagsToRemove = new List<string>();
+            foreach (var tagName in tags)
+            {
+                if (!currentTags.Exists(v => v.TagName == tagName))
+                {
+                    tagsToAdd.Add(tagName);
+                }
+            }
+
+            foreach (var currTag in currentTags)
+            {
+                if (!tags.Exists(updatedTagName => updatedTagName == currTag.TagName))
+                {
+                    tagsToRemove.Add(currTag.TagName);
+                }
+            }
+
+            await _tagService.AddTagsToNoteAsync(noteId, tagsToAdd);
+            await _tagService.RemoveTagsFromNoteAsync(noteId, tagsToRemove);
         }
     }
 }

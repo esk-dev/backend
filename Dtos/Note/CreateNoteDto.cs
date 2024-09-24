@@ -12,7 +12,7 @@ namespace NotesBackend.Dtos.Note
         [MinLength(5, ErrorMessage = "Content must be 5 characters")]
         [MaxLength(280, ErrorMessage = "Content cannot be over 280 characters")]
         public string Content { get; set; } = string.Empty;
-        public List<String> tagNames { get; set; } = new List<string>();
+        public List<String> Tags { get; set; } = new List<string>();
     }
 
 }

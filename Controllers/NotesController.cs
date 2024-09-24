@@ -71,7 +71,7 @@ namespace NotesBackend.Controllers
             var noteModel = createNoteDto.ToNoteFromCreateDto();
             noteModel.UserId = user.Id;
             var note = await _noteService.Create(noteModel);
-            var tagNames = createNoteDto.tagNames;
+            var tagNames = createNoteDto.Tags;
             if (tagNames.LongCount() != 0)
             {
                 await _tagService.AddTagsToNoteAsync(note.Id, tagNames);
@@ -94,6 +94,8 @@ namespace NotesBackend.Controllers
                 return NotFound("Note not found");
             }
 
+            await _noteService.UpdateNoteTagsAsync(id, updateNoteDto.tags);
+
             var note = await _noteService.GetNoteById(id);
             return Ok(note.ToNoteDto());
         }
@@ -106,57 +108,5 @@ namespace NotesBackend.Controllers
 
             return Ok();
         }
-
-
-
-        // POST: api/Notes/{noteId}/tags/{tagName}
-        [HttpPost("{noteId}/tags/{tagName}")]
-        public async Task<IActionResult> AddTagToNote(int noteId, string tagName)
-        {
-            var note = await _noteService.GetNoteById(noteId);
-
-            if (note == null)
-            {
-                return NotFound("Note not found");
-            }
-
-            var tag = await _tagService.GetTagByNameAsync(tagName);
-
-            if (tag == null)
-            {
-                tag = await _tagService.CreateTagAsync(tagName);
-            }
-
-            await _tagService.AddTagToNoteAsync(noteId, tag.Id);
-
-            return Ok(note.ToNoteDto());
-        }
-
-        // DELETE: api/Notes/{noteId}/tags/{tagName}
-        [HttpDelete("{noteId}/tags/{tagName}")]
-        public async Task<IActionResult> RemoveTagFromNote(int noteId, string tagName)
-        {
-            var note = await _noteService.GetNoteById(noteId);
-            if (note == null)
-            {
-                return NotFound("Note not found");
-            }
-
-            var tag = await _tagService.GetTagByNameAsync(tagName);
-            if (tag == null)
-            {
-                return NotFound("Tag not found");
-            }
-
-            var state = await _tagService.RemoveTagFromNoteAsync(note, tag);
-
-            if (state == null)
-            {
-                return NotFound("Not found realation between Note and TAg");
-            }
-
-            return Ok(note.ToNoteDto());
-        }
-
     }
 }

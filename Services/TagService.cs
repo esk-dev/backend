@@ -68,24 +68,20 @@ namespace NotesBackend.Services
         }
 
 
-        public async Task AddTagToNoteAsync(int noteId, int tagId)
+        public async Task RemoveTagsFromNoteAsync(int noteId, List<string> tagNames)
         {
-            var noteTag = new NoteTag { NoteId = noteId, TagId = tagId };
-            _context.NoteTags.Add(noteTag);
+            List<Tag> tagModels = new List<Tag>();
+            foreach (var tagName in tagNames)
+            {
+                var model = await GetTagByNameAsync(tagName);
+                if (model != null)
+                {
+                    tagModels.Add(model);
+                }
+            }
+
+            _context.Tags.RemoveRange(tagModels);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task<Tag> RemoveTagFromNoteAsync(Note note, Tag tag)
-        {
-            var noteTag = await _context.NoteTags.FirstOrDefaultAsync(nt => nt.NoteId == note.Id && nt.TagId == tag.Id);
-
-            if (noteTag == null)
-                return null;
-
-            _context.NoteTags.Remove(noteTag);
-
-            await _context.SaveChangesAsync();
-            return tag;
         }
 
         public async Task AddTagsToNoteAsync(int noteId, List<string> tagNames)
