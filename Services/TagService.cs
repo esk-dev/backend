@@ -42,6 +42,11 @@ namespace NotesBackend.Services
             return await _context.Tags.FirstOrDefaultAsync(t => t.TagName == tagName);
         }
 
+        public async Task<List<Tag>> GetAllTagsByQueryAsync(string query)
+        {
+            return await _context.Tags.Where(tag => tag.TagName.Contains(query)).ToListAsync();
+        }
+
         public async Task DeleteTagAsync(int tagId)
         {
             var tag = await _context.Tags.FindAsync(tagId);

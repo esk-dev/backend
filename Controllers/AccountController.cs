@@ -33,11 +33,11 @@ namespace NotesBackend.Controllers
 
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
 
-            if (user == null) return Unauthorized("Invalid username!");
+            if (user == null) return Unauthorized("Неверное имя пользователя");
 
             var result = await _signinManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
-            if (!result.Succeeded) return Unauthorized("Username not found and/or password incorrect");
+            if (!result.Succeeded) return Unauthorized("Пользователь не найден и/или неверный парольt");
 
             return Ok(
                 new NewUserDto
@@ -81,12 +81,12 @@ namespace NotesBackend.Controllers
                     }
                     else
                     {
-                        return StatusCode(500, roleResult.Errors);
+                        return StatusCode(400, roleResult.Errors);
                     }
                 }
                 else
                 {
-                    return StatusCode(500, createdUser.Errors);
+                    return StatusCode(400, createdUser.Errors);
                 }
             }
             catch (Exception e)

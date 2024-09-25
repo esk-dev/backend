@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -34,12 +35,18 @@ namespace NotesBackend.Controllers
             return await _userManager.FindByNameAsync(userName);
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult> GetAllTagsByQuery([FromQuery] string query)
+        {
+            var tags = await _tagService.GetAllTagsByQueryAsync(query);
+            var tagsDto = tags.Select(t => t.ToTagDto()).ToList();
+            return Ok(tagsDto);
+        }
         // POST /api/Tags
         [HttpPost]
         public async Task<ActionResult<Tag>> CreateTag([FromBody] CreateTagDto createTagDto)
         {
             var tagModel = await _tagService.CreateTagAsync(createTagDto.TagName);
-
             return CreatedAtAction(nameof(GetTag), new { tagId = tagModel.Id }, tagModel.ToTagDto());
         }
 
@@ -49,10 +56,7 @@ namespace NotesBackend.Controllers
         {
             var tag = await _tagService.GetTagByIdAsync(tagId);
             if (tag == null)
-            {
-                return NotFound("Note not found");
-            }
-
+                return NotFound("Тег не найден");
             return Ok(tag.ToTagDto());
         }
 
@@ -65,6 +69,7 @@ namespace NotesBackend.Controllers
             return Ok(tagsDtoe);
         }
 
+
         [HttpPut("{tagId}")]
         public async Task<ActionResult<Tag>> UpdateTag([FromRoute] int tagId, [FromBody] UpdateTagDto updateTagDto)
         {
@@ -75,7 +80,7 @@ namespace NotesBackend.Controllers
 
             if (tagModel == null)
             {
-                return NotFound("Tag not found");
+                return NotFound("Тег не найден");
             }
 
             var tag = await _tagService.GetTagByIdAsync(tagId);
@@ -87,8 +92,7 @@ namespace NotesBackend.Controllers
         public async Task<ActionResult> DeleteTag(int tagId)
         {
             await _tagService.DeleteTagAsync(tagId);
-
-            return NoContent();
+            return Ok();
         }
     }
 }

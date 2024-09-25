@@ -18,7 +18,7 @@ namespace NotesBackend.Data
         public DbSet<Note> Notes { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<NoteTag> NoteTags { get; set; }
-
+        public DbSet<Reminder> Reminders { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -36,10 +36,25 @@ namespace NotesBackend.Data
                 .HasForeignKey(e => e.UserId);
 
                 entity
+                .HasOne(n => n.Reminder)
+                .WithOne(r => r.Note)
+                .HasForeignKey<Reminder>(r => r.NoteId);
+
+                entity
                 .HasMany(e => e.NoteTags)
                 .WithOne(e => e.Note)
                 .HasForeignKey(e => e.NoteId)
                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Reminder>(entity =>
+            {
+                entity
+                .HasKey(e => e.Id);
+                entity
+                .HasOne(e => e.Note)
+                .WithOne(e => e.Reminder)
+                .HasForeignKey<Reminder>(r => r.NoteId);
             });
 
             modelBuilder.Entity<Tag>(entity =>

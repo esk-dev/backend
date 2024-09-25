@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NotesBackend.Models;
 using NotesBackend.Dtos.Note;
@@ -9,10 +5,7 @@ using NotesBackend.Interfaces;
 using NotesBackend.Mappers;
 using NotesBackend.Extensions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using NotesBackend.Dtos;
 
 namespace NotesBackend.Controllers
 {
@@ -39,10 +32,10 @@ namespace NotesBackend.Controllers
 
         // GET: api/Notes
         [HttpGet]
-        public async Task<ActionResult<List<Note>>> GetNotesWithTags()
+        public async Task<ActionResult<List<Note>>> GetNotesWithRelations()
         {
             var user = await GetLoggedInUser();
-            var notes = await _noteService.GetNoteWithTagsListByUserId(user.Id);
+            var notes = await _noteService.GetNoteWithRelationListByUserId(user.Id);
             var noteDtoe = notes.Select(n => n.ToNoteDto()).ToList();
             return Ok(noteDtoe);
         }
@@ -53,10 +46,7 @@ namespace NotesBackend.Controllers
         {
             var note = await _noteService.GetNoteById(id);
             if (note == null)
-            {
-                return NotFound("Note not found");
-            }
-
+                return NotFound("Тег не найден");
             return Ok(note.ToNoteDto());
         }
 
@@ -66,17 +56,15 @@ namespace NotesBackend.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
             var user = await GetLoggedInUser();
             var noteModel = createNoteDto.ToNoteFromCreateDto();
             noteModel.UserId = user.Id;
             var note = await _noteService.Create(noteModel);
             var tagNames = createNoteDto.Tags;
-            if (tagNames.LongCount() != 0)
+            if (tagNames.Count != 0)
             {
                 await _tagService.AddTagsToNoteAsync(note.Id, tagNames);
             }
-
             return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note.ToNoteDto());
         }
 
@@ -86,16 +74,10 @@ namespace NotesBackend.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
             var noteModel = await _noteService.UpdateAsync(id, updateNoteDto.ToNoteFromUpdateDto(id));
-
             if (noteModel == null)
-            {
-                return NotFound("Note not found");
-            }
-
+                return NotFound("Заметка не найдена");
             await _noteService.UpdateNoteTagsAsync(id, updateNoteDto.tags);
-
             var note = await _noteService.GetNoteById(id);
             return Ok(note.ToNoteDto());
         }
@@ -105,7 +87,6 @@ namespace NotesBackend.Controllers
         public async Task<IActionResult> DeleteNote(int id)
         {
             await _noteService.Delete(id);
-
             return Ok();
         }
     }

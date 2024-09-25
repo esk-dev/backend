@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NotesBackend.Migrations
 {
     [DbContext(typeof(NotesBackendDbContext))]
-    [Migration("20240921140114_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20240925035412_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,13 +53,13 @@ namespace NotesBackend.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "30193151-8c24-4a8d-af04-244830ef6e0d",
+                            Id = "d1c88ce9-4589-4fef-b9bb-5a24cbf58b32",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "eecbf0df-4cd5-4429-b34f-f4c96711cbd2",
+                            Id = "e9665a21-1400-4ee1-9211-f7961c9083c4",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -188,6 +188,9 @@ namespace NotesBackend.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<int>("ReminderId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -230,6 +233,32 @@ namespace NotesBackend.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("NoteTags");
+                });
+
+            modelBuilder.Entity("NotesBackend.Models.Reminder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("NoteId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ReminderDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId")
+                        .IsUnique();
+
+                    b.ToTable("Reminders");
                 });
 
             modelBuilder.Entity("NotesBackend.Models.Tag", b =>
@@ -395,9 +424,22 @@ namespace NotesBackend.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("NotesBackend.Models.Reminder", b =>
+                {
+                    b.HasOne("NotesBackend.Models.Note", "Note")
+                        .WithOne("Reminder")
+                        .HasForeignKey("NotesBackend.Models.Reminder", "NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+                });
+
             modelBuilder.Entity("NotesBackend.Models.Note", b =>
                 {
                     b.Navigation("NoteTags");
+
+                    b.Navigation("Reminder");
                 });
 
             modelBuilder.Entity("NotesBackend.Models.Tag", b =>

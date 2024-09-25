@@ -16,6 +16,7 @@ namespace NotesBackend.Mappers
                 UserId = noteModel.UserId,
                 CreatedAt = noteModel.CreatedAt,
                 UpdatedAt = noteModel.UpdatedAt,
+                Reminder = noteModel.Reminder?.ReminderDate,
                 Tags = noteModel.NoteTags.Select(noteTags => noteTags?.ToNoteTagDto()).Select(nt => nt.tag).ToList(),
             };
         }

@@ -32,6 +32,7 @@ namespace NotesBackend.Services
         public async Task<Note> GetNoteById(int noteId)
         {
             return await _context.Notes
+            .Include(n => n.Reminder)
             .Include(n => n.NoteTags)
             .ThenInclude(nt => nt.Tag)
             .FirstOrDefaultAsync(n => n.Id == noteId);
@@ -42,10 +43,11 @@ namespace NotesBackend.Services
             return await _context.Notes.Where(n => n.UserId == userId).ToListAsync();
         }
 
-        public async Task<List<Note>> GetNoteWithTagsListByUserId(string userId)
+        public async Task<List<Note>> GetNoteWithRelationListByUserId(string userId)
         {
             return await _context.Notes
             .Where(n => n.UserId == userId)
+            .Include(n => n.Reminder)
             .Include(n => n.NoteTags)
             .ThenInclude(nt => nt.Tag)
             .ToListAsync();
