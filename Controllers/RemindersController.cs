@@ -13,7 +13,7 @@ namespace NotesBackend.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class ReminderController : ControllerBase
+    public class RemindersController : ControllerBase
     {
         private readonly IReminderService _reminderService;
         private readonly UserManager<User> _userManager;
