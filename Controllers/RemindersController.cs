@@ -18,7 +18,7 @@ namespace NotesBackend.Controllers
         private readonly IReminderService _reminderService;
         private readonly UserManager<User> _userManager;
 
-        public ReminderController(IReminderService reminderService, UserManager<User> userManager)
+        public RemindersController(IReminderService reminderService, UserManager<User> userManager)
         {
             _reminderService = reminderService;
             _userManager = userManager;
